@@ -1,60 +1,43 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Heart, ShoppingBag, Clock } from "lucide-react";
+import { ArrowLeft, Heart, ShoppingBag, Clock, Minus, Plus, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useProduct } from "@/hooks/useProducts";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
-import { useQueryClient } from "@tanstack/react-query";
+import { useCart } from "@/contexts/CartContext";
 import { toast } from "sonner";
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const { user } = useAuth();
   const { data: product, isLoading } = useProduct(id || "");
-  const [reserving, setReserving] = useState(false);
+  const { addItem, items } = useCart();
+  const [quantity, setQuantity] = useState(1);
 
-  const handleReserve = async () => {
-    if (!product || !user) {
-      if (!user) {
-        toast.error("Please sign in to reserve items");
-        navigate("/auth");
-        return;
-      }
+  const cartItem = items.find((i) => i.id === id);
+  const alreadyInCart = cartItem?.quantity || 0;
+  const maxCanAdd = product ? product.quantity - alreadyInCart : 0;
+
+  const handleAddToCart = () => {
+    if (!product) return;
+    if (!user) {
+      toast.error("Please sign in to add items to cart");
+      navigate("/auth?mode=user");
       return;
     }
-
-    setReserving(true);
-    try {
-      // Insert order
-      const { error: orderError } = await supabase.from("orders").insert({
-        product_id: product.id,
-        product_name: product.name,
-        quantity: 1,
-        unit_price: product.price,
-        total_price: product.price,
-        user_id: user.id,
-        shop_id: product.shop_id,
-        status: "pending",
-      });
-      if (orderError) throw orderError;
-
-      // Don't decrement stock yet — admin will accept first
-
-      toast.success("Reservation request sent! The shop will confirm shortly. 📩");
-      queryClient.invalidateQueries({ queryKey: ["product", id] });
-      queryClient.invalidateQueries({ queryKey: ["orders"] });
-
-      queryClient.invalidateQueries({ queryKey: ["products"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
-    } catch (err: any) {
-      toast.error(err.message || "Failed to reserve item");
-    } finally {
-      setReserving(false);
-    }
+    addItem({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      quantity,
+      maxQuantity: product.quantity,
+      imageUrl: product.image_url,
+      shopId: product.shop_id,
+    });
+    toast.success(`Added ${quantity} × ${product.name} to cart 🛒`);
+    setQuantity(1);
   };
 
   if (isLoading) {
@@ -94,8 +77,11 @@ const ProductDetail = () => {
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <button className="absolute right-4 top-4 rounded-full bg-card/80 p-2 backdrop-blur-sm">
-          <Heart className="h-5 w-5" />
+        <button
+          onClick={() => navigate("/cart")}
+          className="absolute right-4 top-4 rounded-full bg-card/80 p-2 backdrop-blur-sm"
+        >
+          <ShoppingCart className="h-5 w-5" />
         </button>
         {!product.is_available && (
           <div className="absolute inset-0 flex items-center justify-center bg-foreground/40">
@@ -138,14 +124,48 @@ const ProductDetail = () => {
           </div>
         )}
 
+        {/* Quantity Selector & Add to Cart */}
         {product.is_available && product.quantity > 0 && (
-          <Button
-            className="mt-6 w-full gradient-fresh text-primary-foreground h-12 text-base font-semibold"
-            onClick={handleReserve}
-            disabled={reserving}
-          >
-            {reserving ? "Reserving..." : "Reserve This Item"}
-          </Button>
+          <div className="mt-6 space-y-4">
+            {alreadyInCart > 0 && (
+              <p className="text-xs text-muted-foreground text-center">
+                Already {alreadyInCart} in cart
+              </p>
+            )}
+            <div className="flex items-center justify-center gap-4">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-10 w-10 rounded-full"
+                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                disabled={quantity <= 1}
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+              <span className="text-xl font-bold min-w-[3rem] text-center">{quantity}</span>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-10 w-10 rounded-full"
+                onClick={() => setQuantity(quantity + 1)}
+                disabled={quantity >= maxCanAdd}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="text-center">
+              <span className="text-lg font-bold text-primary">₹{(product.price * quantity).toFixed(2)}</span>
+              <span className="text-sm text-muted-foreground ml-2">for {quantity} item{quantity > 1 ? "s" : ""}</span>
+            </div>
+            <Button
+              className="w-full gradient-fresh text-primary-foreground h-12 text-base font-semibold"
+              onClick={handleAddToCart}
+              disabled={maxCanAdd <= 0}
+            >
+              <ShoppingCart className="mr-2 h-5 w-5" />
+              {maxCanAdd <= 0 ? "Max quantity in cart" : "Add to Cart"}
+            </Button>
+          </div>
         )}
       </div>
     </div>

@@ -1,6 +1,8 @@
-import { Store, Mail, Phone, MapPin, Calendar, Shield } from "lucide-react";
+import { Store, Mail, Phone, MapPin, Calendar, Shield, LogIn } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import BottomNav from "@/components/BottomNav";
 import { useShop } from "@/hooks/useProducts";
 import { useAuth } from "@/hooks/useAuth";

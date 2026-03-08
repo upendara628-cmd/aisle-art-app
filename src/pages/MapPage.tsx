@@ -28,25 +28,7 @@ const MapPage = () => {
   const lat = shop?.latitude || 20.5937;
   const lng = shop?.longitude || 78.9629;
   const mapSrc = `https://www.openstreetmap.org/export/embed.html?bbox=${lng - 0.01},${lat - 0.01},${lng + 0.01},${lat + 0.01}&layer=mapnik&marker=${lat},${lng}`;
-  const handleStartDirections = () => {
-    const destination = `${lat},${lng}`;
-    const params = new URLSearchParams({
-      api: "1",
-      destination,
-      travelmode: "driving",
-    });
-
-    const url = `https://www.google.com/maps/dir/?${params.toString()}`;
-    const opened = window.open(url, "_blank", "noopener,noreferrer");
-
-    if (!opened) {
-      toast({
-        title: "Popup blocked",
-        description: "Allow pop-ups and tap Start Google Directions again.",
-        variant: "destructive",
-      });
-    }
-  };
+  const directionsHref = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
   const handleOpenDialog = () => {
     setAddress(shop?.address || "");
     setPhone(shop?.phone || "");
@@ -195,12 +177,11 @@ const MapPage = () => {
           </CardContent>
         </Card>
 
-        <Button
-          onClick={handleStartDirections}
-          className="w-full h-14 gradient-fresh text-primary-foreground text-base font-semibold gap-2 shadow-elevated"
-        >
-          <Navigation className="h-5 w-5" />
-          Start Google Directions
+        <Button asChild className="w-full h-14 gradient-fresh text-primary-foreground text-base font-semibold gap-2 shadow-elevated">
+          <a href={directionsHref} target="_blank" rel="noopener noreferrer">
+            <Navigation className="h-5 w-5" />
+            Start Google Directions
+          </a>
         </Button>
       </div>
 

@@ -64,6 +64,56 @@ export type Database = {
           },
         ]
       }
+      orders: {
+        Row: {
+          created_at: string
+          customer_name: string | null
+          id: string
+          product_id: string
+          product_name: string
+          quantity: number
+          shop_id: string
+          status: string
+          total_price: number
+          unit_price: number
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          customer_name?: string | null
+          id?: string
+          product_id: string
+          product_name: string
+          quantity?: number
+          shop_id: string
+          status?: string
+          total_price: number
+          unit_price: number
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          customer_name?: string | null
+          id?: string
+          product_id?: string
+          product_name?: string
+          quantity?: number
+          shop_id?: string
+          status?: string
+          total_price?: number
+          unit_price?: number
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           category_id: string | null

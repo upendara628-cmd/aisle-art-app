@@ -28,7 +28,7 @@ const MapPage = () => {
   const lat = shop?.latitude || 20.5937;
   const lng = shop?.longitude || 78.9629;
   const mapSrc = `https://www.openstreetmap.org/export/embed.html?bbox=${lng - 0.01},${lat - 0.01},${lng + 0.01},${lat + 0.01}&layer=mapnik&marker=${lat},${lng}`;
-  const directionsHref = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
+  const directionsHref = "https://maps.app.goo.gl/MZcbz1UfBWsSnQZy9?g_st=aw";
   const handleOpenDialog = () => {
     setAddress(shop?.address || "");
     setPhone(shop?.phone || "");

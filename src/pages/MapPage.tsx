@@ -177,12 +177,11 @@ const MapPage = () => {
           </CardContent>
         </Card>
 
-        <Button
-          onClick={handleStartDirections}
-          className="w-full h-14 gradient-fresh text-primary-foreground text-base font-semibold gap-2 shadow-elevated"
-        >
-          <Navigation className="h-5 w-5" />
-          Start Google Directions
+        <Button asChild className="w-full h-14 gradient-fresh text-primary-foreground text-base font-semibold gap-2 shadow-elevated">
+          <a href={directionsHref} target="_blank" rel="noopener noreferrer">
+            <Navigation className="h-5 w-5" />
+            Start Google Directions
+          </a>
         </Button>
       </div>
 

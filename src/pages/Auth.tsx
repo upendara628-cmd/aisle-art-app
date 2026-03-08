@@ -10,10 +10,11 @@ import { Store } from "lucide-react";
 
 const Auth = () => {
   const navigate = useNavigate();
-  const { signIn } = useAuth();
+  const { signIn, signUp } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isRegister, setIsRegister] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,14 +23,25 @@ const Auth = () => {
       return;
     }
     setLoading(true);
-    const { error } = await signIn(email, password);
-    setLoading(false);
 
-    if (error) {
-      toast.error(error.message);
+    if (isRegister) {
+      const { error } = await signUp(email, password);
+      setLoading(false);
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success("Account created! You can now sign in.");
+        setIsRegister(false);
+      }
     } else {
-      toast.success("Welcome back!");
-      navigate("/admin");
+      const { error } = await signIn(email, password);
+      setLoading(false);
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success("Welcome back!");
+        navigate("/admin");
+      }
     }
   };
 

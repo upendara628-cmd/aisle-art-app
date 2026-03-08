@@ -1,11 +1,12 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-    appId: 'com.example.nakiranam',
+    appId: 'app.lovable.36adfe4c98ca495580130cc7feaa9227',
     appName: 'na kiranam',
     webDir: 'dist',
     server: {
-        androidScheme: 'https'
+        url: 'https://36adfe4c-98ca-4955-8013-0cc7feaa9227.lovableproject.com?forceHideBadge=true',
+        cleartext: true
     }
 };
 

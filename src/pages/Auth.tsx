@@ -76,7 +76,7 @@ const Auth = () => {
         email: normalizedEmail,
         options: {
           shouldCreateUser: false,
-          emailRedirectTo: `${window.location.origin}/`,
+          emailRedirectTo: customerEmailRedirectUrl,
         },
       });
 

@@ -30,34 +30,22 @@ const MapPage = () => {
   const mapSrc = `https://www.openstreetmap.org/export/embed.html?bbox=${lng - 0.01},${lat - 0.01},${lng + 0.01},${lat + 0.01}&layer=mapnik&marker=${lat},${lng}`;
   const handleStartDirections = () => {
     const destination = `${lat},${lng}`;
+    const params = new URLSearchParams({
+      api: "1",
+      destination,
+      travelmode: "driving",
+    });
 
-    const openDirections = (origin?: string) => {
-      const params = new URLSearchParams({
-        api: "1",
-        destination,
-        travelmode: "driving",
+    const url = `https://www.google.com/maps/dir/?${params.toString()}`;
+    const opened = window.open(url, "_blank", "noopener,noreferrer");
+
+    if (!opened) {
+      toast({
+        title: "Popup blocked",
+        description: "Allow pop-ups and tap Start Google Directions again.",
+        variant: "destructive",
       });
-
-      if (origin) params.set("origin", origin);
-
-      const url = `https://www.google.com/maps/dir/?${params.toString()}`;
-      const newWindow = window.open(url, "_blank", "noopener,noreferrer");
-      if (!newWindow) window.location.href = url;
-    };
-
-    if (!navigator.geolocation) {
-      openDirections();
-      return;
     }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const origin = `${position.coords.latitude},${position.coords.longitude}`;
-        openDirections(origin);
-      },
-      () => openDirections(),
-      { enableHighAccuracy: true, timeout: 7000 }
-    );
   };
   const handleOpenDialog = () => {
     setAddress(shop?.address || "");

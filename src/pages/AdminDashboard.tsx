@@ -445,16 +445,21 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Recent Sales */}
+      {/* Orders & Sales */}
       <div className="px-4 pt-4 pb-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">📦 Recent Sales</h2>
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">📦 Orders & Sales</h2>
           {todaySales && todaySales.revenue > 0 && (
             <span className="text-xs font-semibold text-primary">Today: ₹{todaySales.revenue.toFixed(2)}</span>
           )}
         </div>
         <div className="mt-2">
-          <RecentSales orders={orders || []} />
+          <RecentSales
+            orders={orders || []}
+            onAccept={handleAcceptOrder}
+            onReject={handleRejectOrder}
+            onDelete={handleDeleteOrder}
+          />
         </div>
       </div>
 

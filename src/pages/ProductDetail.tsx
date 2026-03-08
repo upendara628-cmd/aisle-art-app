@@ -48,11 +48,7 @@ const ProductDetail = () => {
       queryClient.invalidateQueries({ queryKey: ["product", id] });
       queryClient.invalidateQueries({ queryKey: ["orders"] });
 
-      toast.success("Item reserved successfully! 🎉");
-      queryClient.invalidateQueries({ queryKey: ["product", id] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
-      queryClient.invalidateQueries({ queryKey: ["orders"] });
-      queryClient.invalidateQueries({ queryKey: ["today-sales"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
     } catch (err: any) {
       toast.error(err.message || "Failed to reserve item");

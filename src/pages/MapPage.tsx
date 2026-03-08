@@ -28,25 +28,7 @@ const MapPage = () => {
   const lat = shop?.latitude || 20.5937;
   const lng = shop?.longitude || 78.9629;
   const mapSrc = `https://www.openstreetmap.org/export/embed.html?bbox=${lng - 0.01},${lat - 0.01},${lng + 0.01},${lat + 0.01}&layer=mapnik&marker=${lat},${lng}`;
-  const handleStartDirections = () => {
-    const destination = `${lat},${lng}`;
-    const params = new URLSearchParams({
-      api: "1",
-      destination,
-      travelmode: "driving",
-    });
-
-    const url = `https://www.google.com/maps/dir/?${params.toString()}`;
-    const opened = window.open(url, "_blank", "noopener,noreferrer");
-
-    if (!opened) {
-      toast({
-        title: "Popup blocked",
-        description: "Allow pop-ups and tap Start Google Directions again.",
-        variant: "destructive",
-      });
-    }
-  };
+  const directionsHref = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
   const handleOpenDialog = () => {
     setAddress(shop?.address || "");
     setPhone(shop?.phone || "");

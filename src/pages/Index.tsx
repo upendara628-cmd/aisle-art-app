@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, TrendingUp } from "lucide-react";
+import { ArrowRight, TrendingUp, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import BottomNav from "@/components/BottomNav";
 import ProductCard from "@/components/ProductCard";
@@ -11,7 +11,7 @@ import heroImage from "@/assets/hero-grocery.jpg";
 
 const Index = () => {
   const navigate = useNavigate();
-  const { isAdmin } = useAuth();
+  const { user, isAdmin, signOut } = useAuth();
   const { data: categories } = useCategories();
   const { data: products, isLoading } = useProducts();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -26,6 +26,25 @@ const Index = () => {
       <div className="relative h-56 overflow-hidden">
         <img src={heroImage} alt="Fresh grocery products" className="h-full w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 to-transparent" />
+        <div className="absolute top-0 right-0 p-3">
+          {user ? (
+            <button
+              onClick={signOut}
+              className="flex items-center gap-1.5 rounded-full bg-card/80 px-3 py-1.5 text-xs font-medium backdrop-blur-sm"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              Sign Out
+            </button>
+          ) : (
+            <button
+              onClick={() => navigate("/auth?mode=user")}
+              className="flex items-center gap-1.5 rounded-full bg-card/80 px-3 py-1.5 text-xs font-medium backdrop-blur-sm"
+            >
+              <User className="h-3.5 w-3.5" />
+              Sign In
+            </button>
+          )}
+        </div>
         <div className="absolute bottom-0 left-0 right-0 p-5">
           <h1 className="text-2xl font-bold text-primary-foreground font-display">
             Fresh & Local

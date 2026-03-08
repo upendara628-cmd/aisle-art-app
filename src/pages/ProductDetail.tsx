@@ -1,13 +1,67 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Heart, ShoppingBag, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useProduct } from "@/hooks/useProducts";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
   const { data: product, isLoading } = useProduct(id || "");
+  const [reserving, setReserving] = useState(false);
+
+  const handleReserve = async () => {
+    if (!product || !user) {
+      if (!user) {
+        toast.error("Please sign in to reserve items");
+        navigate("/auth");
+        return;
+      }
+      return;
+    }
+
+    setReserving(true);
+    try {
+      // Insert order
+      const { error: orderError } = await supabase.from("orders").insert({
+        product_id: product.id,
+        product_name: product.name,
+        quantity: 1,
+        unit_price: product.price,
+        total_price: product.price,
+        user_id: user.id,
+        shop_id: product.shop_id,
+        status: "completed",
+      });
+      if (orderError) throw orderError;
+
+      // Decrement product quantity
+      const newQty = Math.max(0, product.quantity - 1);
+      const { error: updateError } = await supabase
+        .from("products")
+        .update({ quantity: newQty, is_available: newQty > 0 })
+        .eq("id", product.id);
+      if (updateError) throw updateError;
+
+      toast.success("Item reserved successfully! 🎉");
+      queryClient.invalidateQueries({ queryKey: ["product", id] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["today-sales"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+    } catch (err: any) {
+      toast.error(err.message || "Failed to reserve item");
+    } finally {
+      setReserving(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -91,8 +145,12 @@ const ProductDetail = () => {
         )}
 
         {product.is_available && product.quantity > 0 && (
-          <Button className="mt-6 w-full gradient-fresh text-primary-foreground h-12 text-base font-semibold">
-            Reserve This Item
+          <Button
+            className="mt-6 w-full gradient-fresh text-primary-foreground h-12 text-base font-semibold"
+            onClick={handleReserve}
+            disabled={reserving}
+          >
+            {reserving ? "Reserving..." : "Reserve This Item"}
           </Button>
         )}
       </div>

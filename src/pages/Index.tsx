@@ -11,7 +11,7 @@ import heroImage from "@/assets/hero-grocery.jpg";
 
 const Index = () => {
   const navigate = useNavigate();
-  const { isAdmin } = useAuth();
+  const { user, isAdmin, signOut } = useAuth();
   const { data: categories } = useCategories();
   const { data: products, isLoading } = useProducts();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);

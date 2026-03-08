@@ -38,7 +38,7 @@ const ProductDetail = () => {
         total_price: product.price,
         user_id: user.id,
         shop_id: product.shop_id,
-        status: "completed",
+        status: "pending",
       });
       if (orderError) throw orderError;
 

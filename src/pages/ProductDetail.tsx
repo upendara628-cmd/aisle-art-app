@@ -124,8 +124,24 @@ const ProductDetail = () => {
           </div>
         )}
 
+        {/* Login prompt */}
+        {!user && (
+          <div className="mt-6 space-y-3">
+            <Button
+              className="w-full gradient-fresh text-primary-foreground h-12 text-base font-semibold"
+              onClick={() => navigate("/auth?mode=user")}
+            >
+              <User className="mr-2 h-5 w-5" />
+              Sign In to Order
+            </Button>
+            <p className="text-xs text-muted-foreground text-center">
+              Sign in to add items to your cart and place orders
+            </p>
+          </div>
+        )}
+
         {/* Quantity Selector & Add to Cart */}
-        {product.is_available && product.quantity > 0 && (
+        {user && product.is_available && product.quantity > 0 && (
           <div className="mt-6 space-y-4">
             {alreadyInCart > 0 && (
               <p className="text-xs text-muted-foreground text-center">
@@ -165,6 +181,13 @@ const ProductDetail = () => {
               <ShoppingCart className="mr-2 h-5 w-5" />
               {maxCanAdd <= 0 ? "Max quantity in cart" : "Add to Cart"}
             </Button>
+          </div>
+        )}
+
+        {/* Out of stock message for logged-in users */}
+        {user && (!product.is_available || product.quantity <= 0) && (
+          <div className="mt-6 text-center">
+            <p className="text-sm font-medium text-destructive">This product is currently out of stock</p>
           </div>
         )}
       </div>

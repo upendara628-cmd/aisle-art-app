@@ -178,16 +178,15 @@ const MapPage = () => {
           </CardContent>
         </Card>
 
-        <a href={directionsUrl} target="_blank" rel="noopener noreferrer">
-          <Card className="shadow-card hover:shadow-elevated transition-shadow cursor-pointer">
-            <CardContent className="flex items-start gap-3 p-4">
-              <div className="rounded-full bg-success/10 p-2"><Navigation className="h-5 w-5 text-success" /></div>
-              <div>
-                <h3 className="text-sm font-semibold">Get Directions</h3>
-                <p className="text-sm text-muted-foreground">Open in OpenStreetMap</p>
-              </div>
-            </CardContent>
-          </Card>
+        <a
+          href={`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <Button className="w-full h-14 gradient-fresh text-primary-foreground text-base font-semibold gap-2 shadow-elevated">
+            <Navigation className="h-5 w-5" />
+            Navigate to Store
+          </Button>
         </a>
       </div>
 

@@ -28,8 +28,37 @@ const MapPage = () => {
   const lat = shop?.latitude || 20.5937;
   const lng = shop?.longitude || 78.9629;
   const mapSrc = `https://www.openstreetmap.org/export/embed.html?bbox=${lng - 0.01},${lat - 0.01},${lng + 0.01},${lat + 0.01}&layer=mapnik&marker=${lat},${lng}`;
-  const directionsUrl = `https://www.openstreetmap.org/directions?from=&to=${lat},${lng}`;
+  const handleStartDirections = () => {
+    const destination = `${lat},${lng}`;
 
+    const openDirections = (origin?: string) => {
+      const params = new URLSearchParams({
+        api: "1",
+        destination,
+        travelmode: "driving",
+      });
+
+      if (origin) params.set("origin", origin);
+
+      const url = `https://www.google.com/maps/dir/?${params.toString()}`;
+      const newWindow = window.open(url, "_blank", "noopener,noreferrer");
+      if (!newWindow) window.location.href = url;
+    };
+
+    if (!navigator.geolocation) {
+      openDirections();
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const origin = `${position.coords.latitude},${position.coords.longitude}`;
+        openDirections(origin);
+      },
+      () => openDirections(),
+      { enableHighAccuracy: true, timeout: 7000 }
+    );
+  };
   const handleOpenDialog = () => {
     setAddress(shop?.address || "");
     setPhone(shop?.phone || "");
@@ -178,16 +207,13 @@ const MapPage = () => {
           </CardContent>
         </Card>
 
-        <a
-          href={`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`}
-          target="_blank"
-          rel="noopener noreferrer"
+        <Button
+          onClick={handleStartDirections}
+          className="w-full h-14 gradient-fresh text-primary-foreground text-base font-semibold gap-2 shadow-elevated"
         >
-          <Button className="w-full h-14 gradient-fresh text-primary-foreground text-base font-semibold gap-2 shadow-elevated">
-            <Navigation className="h-5 w-5" />
-            Navigate to Store
-          </Button>
-        </a>
+          <Navigation className="h-5 w-5" />
+          Start Google Directions
+        </Button>
       </div>
 
       <BottomNav isAdmin={isAdmin} />

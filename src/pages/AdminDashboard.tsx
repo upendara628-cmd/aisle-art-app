@@ -15,6 +15,8 @@ import { Switch } from "@/components/ui/switch";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/hooks/useAuth";
 import { useShop, useDashboardStats, useCategories } from "@/hooks/useProducts";
+import { useOrders, useTodaysSales } from "@/hooks/useOrders";
+import RecentSales from "@/components/RecentSales";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";

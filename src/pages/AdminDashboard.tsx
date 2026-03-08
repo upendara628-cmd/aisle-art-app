@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Package, AlertTriangle, TrendingUp, Plus, Pencil, Trash2, LogOut, Eye, Camera, Upload, X, Bell, Minus,
+  Package, AlertTriangle, TrendingUp, Plus, Pencil, Trash2, LogOut, Eye, Camera, Upload, X, Bell, Minus, ShoppingBag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";

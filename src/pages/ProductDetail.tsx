@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Heart, ShoppingBag, Clock, Minus, Plus, ShoppingCart } from "lucide-react";
+import { ArrowLeft, Heart, ShoppingBag, Clock, Minus, Plus, ShoppingCart, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useProduct } from "@/hooks/useProducts";

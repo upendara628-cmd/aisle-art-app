@@ -143,26 +143,11 @@ const Auth = () => {
             variant="outline"
             className="w-full h-11 gap-2"
             onClick={async () => {
-              const isNative = Capacitor.isNativePlatform();
-              const redirectUri = isNative 
-                ? "https://nakiranam-auth.lovable.app/google_auth" 
-                : window.location.origin;
-
-              const { data, error } = await supabase.auth.signInWithOAuth({
-                provider: "google",
-                options: {
-                  redirectTo: redirectUri,
-                  skipBrowserRedirect: isNative,
-                }
+              const { error } = await lovable.auth.signInWithOAuth("google", {
+                redirect_uri: window.location.origin,
               });
-              
               if (error) {
                 toast.error(error.message);
-                return;
-              }
-
-              if (isNative && data?.url) {
-                await Browser.open({ url: data.url });
               }
             }}
           >

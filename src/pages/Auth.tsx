@@ -15,9 +15,8 @@ const Auth = () => {
   const mode = searchParams.get("mode") || "user";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
-  const [otpSent, setOtpSent] = useState(false);
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
 
   const isAdminMode = mode === "admin";
 

@@ -48,24 +48,10 @@ export const useAuth = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error };
-  };
-
-  const signUp = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { emailRedirectTo: window.location.origin },
-    });
-    return { error };
-  };
-
   const signOut = async () => {
     adminCheckRef.current = null;
     await supabase.auth.signOut();
   };
 
-  return { user, loading, isAdmin, signIn, signUp, signOut };
+  return { user, loading, isAdmin, signOut };
 };

@@ -4,52 +4,59 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { useAuth } from "@/hooks/useAuth";
-import { lovable } from "@/integrations/lovable/index";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Store, User } from "lucide-react";
-import { Capacitor } from "@capacitor/core";
-import { Browser } from "@capacitor/browser";
+import { Store, User, ArrowLeft } from "lucide-react";
 
 const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const mode = searchParams.get("mode") || "user"; // "user" or "admin"
-  const { signIn, signUp } = useAuth();
+  const mode = searchParams.get("mode") || "user";
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isRegister, setIsRegister] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
 
   const isAdminMode = mode === "admin";
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim() || !password.trim()) {
-      toast.error("Please fill in all fields");
+    if (!email.trim()) {
+      toast.error("Please enter your email");
       return;
     }
     setLoading(true);
-
-    if (isRegister) {
-      const { error } = await signUp(email, password);
-      setLoading(false);
-      if (error) {
-        toast.error(error.message);
-      } else {
-        toast.success("Account created! You can now sign in.");
-        setIsRegister(false);
-      }
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { shouldCreateUser: true },
+    });
+    setLoading(false);
+    if (error) {
+      toast.error(error.message);
     } else {
-      const { error } = await signIn(email, password);
-      setLoading(false);
-      if (error) {
-        toast.error(error.message);
-      } else {
-        toast.success("Welcome back!");
-        navigate(isAdminMode ? "/admin" : "/");
-      }
+      setOtpSent(true);
+      toast.success("OTP sent to your email!");
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (otp.length !== 6) {
+      toast.error("Please enter the 6-digit code");
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.verifyOtp({
+      email,
+      token: otp,
+      type: "email",
+    });
+    setLoading(false);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("Welcome!");
+      navigate(isAdminMode ? "/admin" : "/");
     }
   };
 
@@ -88,52 +95,66 @@ const Auth = () => {
               )}
             </div>
             <h1 className="mt-3 text-xl font-bold font-display">
-              {isRegister
-                ? isAdminMode ? "Owner Registration" : "Create Account"
-                : isAdminMode ? "Owner Login" : "Customer Login"}
+              {otpSent ? "Enter OTP" : isAdminMode ? "Owner Login" : "Customer Login"}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              {isRegister
-                ? isAdminMode ? "Create your owner account" : "Sign up to reserve items"
-                : isAdminMode ? "Sign in to manage your store" : "Sign in to reserve items from the store"}
+              {otpSent
+                ? `We sent a 6-digit code to ${email}`
+                : isAdminMode
+                ? "Sign in to manage your store"
+                : "Sign in to reserve items from the store"}
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label>Email</Label>
-              <Input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder={isAdminMode ? "owner@store.com" : "you@email.com"}
-              />
+          {!otpSent ? (
+            <form onSubmit={handleSendOtp} className="space-y-4">
+              <div>
+                <Label>Email</Label>
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder={isAdminMode ? "owner@store.com" : "you@email.com"}
+                />
+              </div>
+              <Button
+                type="submit"
+                className={`w-full h-11 ${isAdminMode ? "gradient-fresh text-primary-foreground" : "bg-primary text-primary-foreground"}`}
+                disabled={loading}
+              >
+                {loading ? "Sending..." : "Send OTP"}
+              </Button>
+            </form>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex justify-center">
+                <InputOTP maxLength={6} value={otp} onChange={setOtp}>
+                  <InputOTPGroup>
+                    <InputOTPSlot index={0} />
+                    <InputOTPSlot index={1} />
+                    <InputOTPSlot index={2} />
+                    <InputOTPSlot index={3} />
+                    <InputOTPSlot index={4} />
+                    <InputOTPSlot index={5} />
+                  </InputOTPGroup>
+                </InputOTP>
+              </div>
+              <Button
+                onClick={handleVerifyOtp}
+                className={`w-full h-11 ${isAdminMode ? "gradient-fresh text-primary-foreground" : "bg-primary text-primary-foreground"}`}
+                disabled={loading || otp.length !== 6}
+              >
+                {loading ? "Verifying..." : "Verify & Sign In"}
+              </Button>
+              <button
+                onClick={() => { setOtpSent(false); setOtp(""); }}
+                className="flex items-center justify-center gap-1 w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" />
+                Change email
+              </button>
             </div>
-            <div>
-              <Label>Password</Label>
-              <Input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-              />
-            </div>
-            <Button
-              type="submit"
-              className={`w-full h-11 ${isAdminMode ? "gradient-fresh text-primary-foreground" : "bg-primary text-primary-foreground"}`}
-              disabled={loading}
-            >
-              {loading ? "Please wait..." : isRegister ? "Create Account" : "Sign In"}
-            </Button>
-          </form>
-
-
-          <button
-            onClick={() => setIsRegister(!isRegister)}
-            className="mt-4 block w-full text-center text-sm text-primary hover:underline"
-          >
-            {isRegister ? "Already have an account? Sign In" : "Don't have an account? Sign Up"}
-          </button>
+          )}
         </CardContent>
       </Card>
     </div>

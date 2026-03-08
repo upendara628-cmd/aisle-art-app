@@ -180,6 +180,57 @@ const AdminDashboard = () => {
     queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
   };
 
+  const handleAcceptOrder = async (order: any) => {
+    // Update order status to completed
+    const { error: orderErr } = await supabase
+      .from("orders")
+      .update({ status: "completed" })
+      .eq("id", order.id);
+    if (orderErr) { toast.error(orderErr.message); return; }
+
+    // Decrement product quantity
+    const { data: product } = await supabase
+      .from("products")
+      .select("quantity")
+      .eq("id", order.product_id)
+      .single();
+
+    if (product) {
+      const newQty = Math.max(0, product.quantity - order.quantity);
+      await supabase
+        .from("products")
+        .update({ quantity: newQty, is_available: newQty > 0 })
+        .eq("id", order.product_id);
+    }
+
+    toast.success("Order accepted! ✅");
+    queryClient.invalidateQueries({ queryKey: ["orders"] });
+    queryClient.invalidateQueries({ queryKey: ["today-sales"] });
+    queryClient.invalidateQueries({ queryKey: ["products"] });
+    queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+  };
+
+  const handleRejectOrder = async (orderId: string) => {
+    const { error } = await supabase
+      .from("orders")
+      .update({ status: "rejected" })
+      .eq("id", orderId);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Order rejected");
+    queryClient.invalidateQueries({ queryKey: ["orders"] });
+  };
+
+  const handleDeleteOrder = async (orderId: string) => {
+    const { error } = await supabase
+      .from("orders")
+      .delete()
+      .eq("id", orderId);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Sale record deleted");
+    queryClient.invalidateQueries({ queryKey: ["orders"] });
+    queryClient.invalidateQueries({ queryKey: ["today-sales"] });
+  };
+
   const openEdit = (product: any) => {
     setEditProduct(product);
     setForm({

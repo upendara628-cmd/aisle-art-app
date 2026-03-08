@@ -28,6 +28,8 @@ const AdminDashboard = () => {
   const { data: shop } = useShop();
   const { data: stats } = useDashboardStats(shop?.id);
   const { data: categories } = useCategories();
+  const { data: orders } = useOrders(shop?.id);
+  const { data: todaySales } = useTodaysSales(shop?.id);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editProduct, setEditProduct] = useState<any>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);

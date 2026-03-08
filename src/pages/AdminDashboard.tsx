@@ -224,26 +224,33 @@ const AdminDashboard = () => {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-3 px-4 -mt-2">
+      <div className="grid grid-cols-4 gap-2 px-4 -mt-2">
         <Card className="shadow-card">
-          <CardContent className="p-3 text-center">
-            <Package className="mx-auto h-5 w-5 text-primary" />
-            <p className="mt-1 text-xl font-bold">{stats?.total || 0}</p>
+          <CardContent className="p-2 text-center">
+            <Package className="mx-auto h-4 w-4 text-primary" />
+            <p className="mt-1 text-lg font-bold">{stats?.total || 0}</p>
             <p className="text-[10px] text-muted-foreground">Total</p>
           </CardContent>
         </Card>
         <Card className="shadow-card">
-          <CardContent className="p-3 text-center">
-            <AlertTriangle className="mx-auto h-5 w-5 text-warning" />
-            <p className="mt-1 text-xl font-bold">{stats?.lowStock || 0}</p>
-            <p className="text-[10px] text-muted-foreground">Low Stock</p>
+          <CardContent className="p-2 text-center">
+            <AlertTriangle className="mx-auto h-4 w-4 text-warning" />
+            <p className="mt-1 text-lg font-bold">{stats?.lowStock || 0}</p>
+            <p className="text-[10px] text-muted-foreground">Low</p>
           </CardContent>
         </Card>
         <Card className="shadow-card">
-          <CardContent className="p-3 text-center">
-            <TrendingUp className="mx-auto h-5 w-5 text-accent" />
-            <p className="mt-1 text-xl font-bold">{stats?.outOfStock || 0}</p>
-            <p className="text-[10px] text-muted-foreground">Out of Stock</p>
+          <CardContent className="p-2 text-center">
+            <TrendingUp className="mx-auto h-4 w-4 text-accent" />
+            <p className="mt-1 text-lg font-bold">{stats?.outOfStock || 0}</p>
+            <p className="text-[10px] text-muted-foreground">Out</p>
+          </CardContent>
+        </Card>
+        <Card className="shadow-card border-primary/20">
+          <CardContent className="p-2 text-center">
+            <ShoppingBag className="mx-auto h-4 w-4 text-primary" />
+            <p className="mt-1 text-lg font-bold">{todaySales?.count || 0}</p>
+            <p className="text-[10px] text-muted-foreground">Today</p>
           </CardContent>
         </Card>
       </div>

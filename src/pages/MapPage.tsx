@@ -207,16 +207,13 @@ const MapPage = () => {
           </CardContent>
         </Card>
 
-        <a
-          href={`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`}
-          target="_blank"
-          rel="noopener noreferrer"
+        <Button
+          onClick={handleStartDirections}
+          className="w-full h-14 gradient-fresh text-primary-foreground text-base font-semibold gap-2 shadow-elevated"
         >
-          <Button className="w-full h-14 gradient-fresh text-primary-foreground text-base font-semibold gap-2 shadow-elevated">
-            <Navigation className="h-5 w-5" />
-            Navigate to Store
-          </Button>
-        </a>
+          <Navigation className="h-5 w-5" />
+          Start Google Directions
+        </Button>
       </div>
 
       <BottomNav isAdmin={isAdmin} />

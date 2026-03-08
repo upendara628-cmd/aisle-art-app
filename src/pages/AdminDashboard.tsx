@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Package, AlertTriangle, TrendingUp, Plus, Pencil, Trash2, LogOut, Eye, Camera, Upload, X, Bell, Minus,
+  Package, AlertTriangle, TrendingUp, Plus, Pencil, Trash2, LogOut, Eye, Camera, Upload, X, Bell, Minus, ShoppingBag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,6 +15,8 @@ import { Switch } from "@/components/ui/switch";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/hooks/useAuth";
 import { useShop, useDashboardStats, useCategories } from "@/hooks/useProducts";
+import { useOrders, useTodaysSales } from "@/hooks/useOrders";
+import RecentSales from "@/components/RecentSales";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -26,6 +28,8 @@ const AdminDashboard = () => {
   const { data: shop } = useShop();
   const { data: stats } = useDashboardStats(shop?.id);
   const { data: categories } = useCategories();
+  const { data: orders } = useOrders(shop?.id);
+  const { data: todaySales } = useTodaysSales(shop?.id);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editProduct, setEditProduct] = useState<any>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -220,26 +224,33 @@ const AdminDashboard = () => {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-3 px-4 -mt-2">
+      <div className="grid grid-cols-4 gap-2 px-4 -mt-2">
         <Card className="shadow-card">
-          <CardContent className="p-3 text-center">
-            <Package className="mx-auto h-5 w-5 text-primary" />
-            <p className="mt-1 text-xl font-bold">{stats?.total || 0}</p>
+          <CardContent className="p-2 text-center">
+            <Package className="mx-auto h-4 w-4 text-primary" />
+            <p className="mt-1 text-lg font-bold">{stats?.total || 0}</p>
             <p className="text-[10px] text-muted-foreground">Total</p>
           </CardContent>
         </Card>
         <Card className="shadow-card">
-          <CardContent className="p-3 text-center">
-            <AlertTriangle className="mx-auto h-5 w-5 text-warning" />
-            <p className="mt-1 text-xl font-bold">{stats?.lowStock || 0}</p>
-            <p className="text-[10px] text-muted-foreground">Low Stock</p>
+          <CardContent className="p-2 text-center">
+            <AlertTriangle className="mx-auto h-4 w-4 text-warning" />
+            <p className="mt-1 text-lg font-bold">{stats?.lowStock || 0}</p>
+            <p className="text-[10px] text-muted-foreground">Low</p>
           </CardContent>
         </Card>
         <Card className="shadow-card">
-          <CardContent className="p-3 text-center">
-            <TrendingUp className="mx-auto h-5 w-5 text-accent" />
-            <p className="mt-1 text-xl font-bold">{stats?.outOfStock || 0}</p>
-            <p className="text-[10px] text-muted-foreground">Out of Stock</p>
+          <CardContent className="p-2 text-center">
+            <TrendingUp className="mx-auto h-4 w-4 text-accent" />
+            <p className="mt-1 text-lg font-bold">{stats?.outOfStock || 0}</p>
+            <p className="text-[10px] text-muted-foreground">Out</p>
+          </CardContent>
+        </Card>
+        <Card className="shadow-card border-primary/20">
+          <CardContent className="p-2 text-center">
+            <ShoppingBag className="mx-auto h-4 w-4 text-primary" />
+            <p className="mt-1 text-lg font-bold">{todaySales?.count || 0}</p>
+            <p className="text-[10px] text-muted-foreground">Today</p>
           </CardContent>
         </Card>
       </div>
@@ -431,6 +442,19 @@ const AdminDashboard = () => {
           {!stats?.products?.length && (
             <p className="py-8 text-center text-sm text-muted-foreground">No products yet. Add your first product above!</p>
           )}
+        </div>
+      </div>
+
+      {/* Recent Sales */}
+      <div className="px-4 pt-4 pb-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">📦 Recent Sales</h2>
+          {todaySales && todaySales.revenue > 0 && (
+            <span className="text-xs font-semibold text-primary">Today: ₹{todaySales.revenue.toFixed(2)}</span>
+          )}
+        </div>
+        <div className="mt-2">
+          <RecentSales orders={orders || []} />
         </div>
       </div>
 

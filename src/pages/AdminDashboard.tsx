@@ -160,6 +160,14 @@ const AdminDashboard = () => {
     resetForm();
   };
 
+  const handleQuantityChange = async (id: string, currentQty: number, delta: number) => {
+    const newQty = Math.max(0, currentQty + delta);
+    const { error } = await supabase.from("products").update({ quantity: newQty, is_available: newQty > 0 }).eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    queryClient.invalidateQueries({ queryKey: ["products"] });
+    queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+  };
+
   const handleDelete = async (id: string) => {
     const { error } = await supabase.from("products").delete().eq("id", id);
     if (error) { toast.error(error.message); return; }

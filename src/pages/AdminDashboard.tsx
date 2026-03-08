@@ -247,7 +247,7 @@ const AdminDashboard = () => {
       {/* Low stock alerts */}
       {stats?.lowStock ? (
         <div className="px-4 pt-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">⚠️ Low Stock Alerts</h2>
+          <h2 id="low-stock-alerts" className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">⚠️ Low Stock Alerts</h2>
           <div className="mt-2 space-y-2">
             {stats.products
               ?.filter((p) => p.quantity <= (p.low_stock_threshold || 5) && p.quantity > 0)

@@ -6,8 +6,11 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { lovable } from "@/integrations/lovable/index";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Store, User } from "lucide-react";
+import { Capacitor } from "@capacitor/core";
+import { Browser } from "@capacitor/browser";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -140,10 +143,27 @@ const Auth = () => {
             variant="outline"
             className="w-full h-11 gap-2"
             onClick={async () => {
-              const { error } = await lovable.auth.signInWithOAuth("google", {
-                redirect_uri: window.location.origin,
+              const isNative = Capacitor.isNativePlatform();
+              const redirectUri = isNative 
+                ? "https://nakiranam-auth.lovable.app/google_auth" 
+                : window.location.origin;
+
+              const { data, error } = await supabase.auth.signInWithOAuth({
+                provider: "google",
+                options: {
+                  redirectTo: redirectUri,
+                  skipBrowserRedirect: isNative,
+                }
               });
-              if (error) toast.error(error.message);
+              
+              if (error) {
+                toast.error(error.message);
+                return;
+              }
+
+              if (isNative && data?.url) {
+                await Browser.open({ url: data.url });
+              }
             }}
           >
             <svg className="h-4 w-4" viewBox="0 0 24 24">

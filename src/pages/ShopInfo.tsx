@@ -1,18 +1,32 @@
-import { Store, Mail, Phone, MapPin, Calendar, Shield } from "lucide-react";
+import { Store, Mail, Phone, MapPin, Calendar, Shield, LogIn } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import BottomNav from "@/components/BottomNav";
 import { useShop } from "@/hooks/useProducts";
 import { useAuth } from "@/hooks/useAuth";
 
 const ShopInfo = () => {
-  const { isAdmin } = useAuth();
+  const navigate = useNavigate();
+  const { user, isAdmin } = useAuth();
   const { data: shop } = useShop();
 
   return (
     <div className="min-h-screen bg-background safe-bottom">
       {/* Header */}
-      <div className="gradient-hero px-4 pb-8 pt-12 text-center">
+      <div className="gradient-hero px-4 pb-8 pt-12 text-center relative">
+        {!user && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="absolute right-3 top-4 text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary-foreground/10"
+            onClick={() => navigate("/auth")}
+          >
+            <LogIn className="mr-1.5 h-4 w-4" />
+            Owner Login
+          </Button>
+        )}
         <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-card/20 backdrop-blur-sm">
           <Store className="h-10 w-10 text-primary-foreground" />
         </div>

@@ -15,7 +15,18 @@ const ShopInfo = () => {
   return (
     <div className="min-h-screen bg-background safe-bottom">
       {/* Header */}
-      <div className="gradient-hero px-4 pb-8 pt-12 text-center">
+      <div className="gradient-hero px-4 pb-8 pt-12 text-center relative">
+        {!user && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="absolute right-3 top-4 text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary-foreground/10"
+            onClick={() => navigate("/auth")}
+          >
+            <LogIn className="mr-1.5 h-4 w-4" />
+            Owner Login
+          </Button>
+        )}
         <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-card/20 backdrop-blur-sm">
           <Store className="h-10 w-10 text-primary-foreground" />
         </div>

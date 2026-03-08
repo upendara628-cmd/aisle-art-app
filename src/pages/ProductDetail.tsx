@@ -38,23 +38,17 @@ const ProductDetail = () => {
         total_price: product.price,
         user_id: user.id,
         shop_id: product.shop_id,
-        status: "completed",
+        status: "pending",
       });
       if (orderError) throw orderError;
 
-      // Decrement product quantity
-      const newQty = Math.max(0, product.quantity - 1);
-      const { error: updateError } = await supabase
-        .from("products")
-        .update({ quantity: newQty, is_available: newQty > 0 })
-        .eq("id", product.id);
-      if (updateError) throw updateError;
+      // Don't decrement stock yet — admin will accept first
 
-      toast.success("Item reserved successfully! 🎉");
+      toast.success("Reservation request sent! The shop will confirm shortly. 📩");
       queryClient.invalidateQueries({ queryKey: ["product", id] });
-      queryClient.invalidateQueries({ queryKey: ["products"] });
       queryClient.invalidateQueries({ queryKey: ["orders"] });
-      queryClient.invalidateQueries({ queryKey: ["today-sales"] });
+
+      queryClient.invalidateQueries({ queryKey: ["products"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
     } catch (err: any) {
       toast.error(err.message || "Failed to reserve item");

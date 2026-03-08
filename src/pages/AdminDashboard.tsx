@@ -173,6 +173,12 @@ const AdminDashboard = () => {
   };
 
   const handleDelete = async (id: string) => {
+    // Check if product has orders
+    const { count } = await supabase.from("orders").select("id", { count: "exact", head: true }).eq("product_id", id);
+    if (count && count > 0) {
+      toast.error("Cannot delete — this product has order history. Set quantity to 0 instead.");
+      return;
+    }
     const { error } = await supabase.from("products").delete().eq("id", id);
     if (error) { toast.error(error.message); return; }
     toast.success("Product deleted");

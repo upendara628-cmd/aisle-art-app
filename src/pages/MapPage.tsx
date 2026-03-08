@@ -3,20 +3,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import BottomNav from "@/components/BottomNav";
 import { useShop } from "@/hooks/useProducts";
 import { useAuth } from "@/hooks/useAuth";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
-
-// Fix default marker icon
-const defaultIcon = L.icon({
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-});
 
 const MapPage = () => {
   const { isAdmin } = useAuth();
@@ -24,6 +10,8 @@ const MapPage = () => {
 
   const lat = shop?.latitude || 20.5937;
   const lng = shop?.longitude || 78.9629;
+  const mapSrc = `https://www.openstreetmap.org/export/embed.html?bbox=${lng - 0.01},${lat - 0.01},${lng + 0.01},${lat + 0.01}&layer=mapnik&marker=${lat},${lng}`;
+  const directionsUrl = `https://www.openstreetmap.org/directions?from=&to=${lat},${lng}`;
 
   return (
     <div className="min-h-screen bg-background safe-bottom">
@@ -32,17 +20,17 @@ const MapPage = () => {
         <p className="mt-1 text-sm text-primary-foreground/70">Get directions to visit us</p>
       </div>
 
-      {/* OpenStreetMap */}
+      {/* OpenStreetMap Embed */}
       <div className="mx-4 mt-4 overflow-hidden rounded-xl border border-border" style={{ height: 260 }}>
-        <MapContainer center={[lat, lng]} zoom={14} style={{ height: "100%", width: "100%" }} scrollWheelZoom={false}>
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          <Marker position={[lat, lng]} icon={defaultIcon}>
-            <Popup>{shop?.name || "Our Store"}</Popup>
-          </Marker>
-        </MapContainer>
+        <iframe
+          title="Store Location"
+          src={mapSrc}
+          width="100%"
+          height="100%"
+          style={{ border: 0 }}
+          allowFullScreen
+          loading="lazy"
+        />
       </div>
 
       {/* Shop Details */}
@@ -78,23 +66,17 @@ const MapPage = () => {
           </CardContent>
         </Card>
 
-        {shop?.latitude && shop?.longitude && (
-          <a
-            href={`https://www.openstreetmap.org/directions?from=&to=${shop.latitude},${shop.longitude}`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Card className="shadow-card hover:shadow-elevated transition-shadow cursor-pointer">
-              <CardContent className="flex items-start gap-3 p-4">
-                <div className="rounded-full bg-success/10 p-2"><Navigation className="h-5 w-5 text-success" /></div>
-                <div>
-                  <h3 className="text-sm font-semibold">Get Directions</h3>
-                  <p className="text-sm text-muted-foreground">Open in OpenStreetMap</p>
-                </div>
-              </CardContent>
-            </Card>
-          </a>
-        )}
+        <a href={directionsUrl} target="_blank" rel="noopener noreferrer">
+          <Card className="shadow-card hover:shadow-elevated transition-shadow cursor-pointer">
+            <CardContent className="flex items-start gap-3 p-4">
+              <div className="rounded-full bg-success/10 p-2"><Navigation className="h-5 w-5 text-success" /></div>
+              <div>
+                <h3 className="text-sm font-semibold">Get Directions</h3>
+                <p className="text-sm text-muted-foreground">Open in OpenStreetMap</p>
+              </div>
+            </CardContent>
+          </Card>
+        </a>
       </div>
 
       <BottomNav isAdmin={isAdmin} />

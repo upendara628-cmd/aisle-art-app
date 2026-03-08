@@ -7,6 +7,7 @@ import ProductCard from "@/components/ProductCard";
 import CategoryChip from "@/components/CategoryChip";
 import { useProducts, useCategories } from "@/hooks/useProducts";
 import { useAuth } from "@/hooks/useAuth";
+import { useNewProductNotifications } from "@/hooks/useNewProductNotifications";
 import heroImage from "@/assets/hero-grocery.jpg";
 
 const Index = () => {
@@ -14,6 +15,7 @@ const Index = () => {
   const { user, isAdmin, signOut } = useAuth();
   const { data: categories } = useCategories();
   const { data: products, isLoading } = useProducts();
+  useNewProductNotifications();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const filteredProducts = selectedCategory

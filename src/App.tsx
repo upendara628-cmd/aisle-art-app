@@ -30,8 +30,31 @@ function NotificationHandler() {
         if (permissions.display !== 'granted') {
           await LocalNotifications.requestPermissions();
         }
+
+        // Create a channel for Android
+        await LocalNotifications.createChannel({
+          id: 'stock-alerts',
+          name: 'Stock & Order Alerts',
+          description: 'Notifications for low stock and order status',
+          importance: 5,
+          visibility: 1,
+          vibration: true,
+        });
+
+        // TEST NOTIFICATION - Confirm it works on app open
+        /*
+        await LocalNotifications.schedule({
+          notifications: [{
+            title: 'Notifications Active! 🔔',
+            body: 'You will receive stock and order updates here.',
+            id: 123,
+            channelId: 'stock-alerts',
+            schedule: { at: new Date(Date.now() + 1000) }
+          }]
+        });
+        */
       } catch (e) {
-        console.log("LocalNotifications permission not available on this platform", e);
+        console.log("LocalNotifications setup error", e);
       }
     };
     setupNotifications();
@@ -53,6 +76,7 @@ function NotificationHandler() {
                   title: 'Back in Stock! 🎉',
                   body: `${newRecord.name || 'An item'} is now available again!`,
                   id: Math.floor(Math.random() * 1000000),
+                  channelId: 'stock-alerts',
                   schedule: { at: new Date(Date.now() + 500) },
                 }
               ]
@@ -84,8 +108,9 @@ function NotificationHandler() {
                 notifications: [
                   {
                     title: 'Order Allotted! ✅',
-                    body: `Your order for ${newRecord.product_name} has been accepted and stock is allotted.`,
+                    body: `Your order for ${newRecord.product_name} has been accepted.`,
                     id: Math.floor(Math.random() * 1000000),
+                    channelId: 'stock-alerts',
                     schedule: { at: new Date(Date.now() + 500) },
                   }
                 ]
@@ -101,38 +126,32 @@ function NotificationHandler() {
       if (!isAdmin || !user) return;
 
       try {
-        // Fetch low stock items
         const { data: products } = await supabase
           .from("products")
-          .select("name, quantity, low_stock_threshold")
-          .lt("quantity", 6); // Simple check for < 6
+          .select("name, quantity, low_stock_threshold");
 
         const lowItems = products?.filter(p => p.quantity <= (p.low_stock_threshold || 5)) || [];
-        
         if (lowItems.length === 0) return;
 
         const body = `Items running low: ${lowItems.map(p => `${p.name} (${p.quantity})`).join(", ")}`;
 
-        // Calculate next 9:00 AM
         const now = new Date();
         const scheduledTime = new Date();
         scheduledTime.setHours(9, 0, 0, 0);
         
         if (now.getTime() > scheduledTime.getTime()) {
-          // If already past 9 AM, schedule for tomorrow
           scheduledTime.setDate(scheduledTime.getDate() + 1);
         }
 
-        // Cancel previous 9AM notification to avoid duplicates
         await LocalNotifications.cancel({ notifications: [{ id: 9000 }] });
-
         await LocalNotifications.schedule({
           notifications: [
             {
               title: 'Low Stock Alert ⚠️',
               body: body.length > 100 ? body.substring(0, 97) + "..." : body,
               id: 9000,
-              schedule: { at: scheduledTime },
+              channelId: 'stock-alerts',
+              schedule: { at: scheduledTime, allowWhileIdle: true },
             }
           ]
         });
@@ -140,6 +159,7 @@ function NotificationHandler() {
         console.error("Error scheduling 9AM notification", e);
       }
     };
+
 
     if (isAdmin) {
       scheduleAdminDailyLowStock();

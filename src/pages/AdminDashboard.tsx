@@ -20,6 +20,7 @@ import RecentSales from "@/components/RecentSales";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { LocalNotifications } from "@capacitor/local-notifications";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -252,6 +253,23 @@ const AdminDashboard = () => {
     setIsAddOpen(true);
   };
 
+  const handleTestNotification = async () => {
+    try {
+      await LocalNotifications.schedule({
+        notifications: [{
+          title: 'Test Notification 🔔',
+          body: 'If you see this, notifications are working correctly!',
+          id: 777,
+          channelId: 'stock-alerts',
+          schedule: { at: new Date(Date.now() + 2000) }
+        }]
+      });
+      toast.success("Test notification scheduled for 2 seconds from now!");
+    } catch (e) {
+      toast.error("Failed to schedule notification: " + (e as Error).message);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background safe-bottom">
       {/* Header */}
@@ -273,6 +291,9 @@ const AdminDashboard = () => {
                 </span>
               </button>
             )}
+            <Button variant="ghost" size="icon" onClick={handleTestNotification} className="text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10" title="Test Notification">
+              <Bell className="h-5 w-5" />
+            </Button>
             <Button variant="ghost" size="icon" onClick={signOut} className="text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10">
               <LogOut className="h-5 w-5" />
             </Button>

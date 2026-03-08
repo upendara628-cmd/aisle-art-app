@@ -8,7 +8,8 @@ import { useShop } from "@/hooks/useProducts";
 import { useAuth } from "@/hooks/useAuth";
 
 const ShopInfo = () => {
-  const { isAdmin } = useAuth();
+  const navigate = useNavigate();
+  const { user, isAdmin } = useAuth();
   const { data: shop } = useShop();
 
   return (

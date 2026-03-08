@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Package, AlertTriangle, TrendingUp, Plus, Pencil, Trash2, LogOut, Eye,
+  Package, AlertTriangle, TrendingUp, Plus, Pencil, Trash2, LogOut, Eye, Camera, Upload, X, Bell,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,9 +28,43 @@ const AdminDashboard = () => {
   const { data: categories } = useCategories();
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editProduct, setEditProduct] = useState<any>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({
     name: "", description: "", price: "", quantity: "", category_id: "", is_available: true,
   });
+
+  // Low stock notification toast — shown once per session
+  useEffect(() => {
+    if (stats && stats.lowStock > 0) {
+      const shownKey = `low_stock_notified_${stats.lowStock}`;
+      if (!sessionStorage.getItem(shownKey)) {
+        sessionStorage.setItem(shownKey, "true");
+        const lowItems = stats.products
+          ?.filter((p) => p.quantity <= (p.low_stock_threshold || 5) && p.quantity > 0) || [];
+        toast.warning(
+          `⚠️ ${stats.lowStock} product${stats.lowStock > 1 ? "s" : ""} running low on stock!`,
+          {
+            description: lowItems.slice(0, 3).map(p => `${p.name} (${p.quantity} left)`).join(", "),
+            duration: 8000,
+          }
+        );
+      }
+    }
+    if (stats && stats.outOfStock > 0) {
+      const shownKey = `out_of_stock_notified_${stats.outOfStock}`;
+      if (!sessionStorage.getItem(shownKey)) {
+        sessionStorage.setItem(shownKey, "true");
+        toast.error(
+          `🚨 ${stats.outOfStock} product${stats.outOfStock > 1 ? "s are" : " is"} out of stock!`,
+          { duration: 8000 }
+        );
+      }
+    }
+  }, [stats]);
 
   if (!user) {
     return (
@@ -47,6 +81,44 @@ const AdminDashboard = () => {
   const resetForm = () => {
     setForm({ name: "", description: "", price: "", quantity: "", category_id: "", is_available: true });
     setEditProduct(null);
+    setImagePreview(null);
+    setImageFile(null);
+  };
+
+  const handleImageCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image must be under 5MB");
+      return;
+    }
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onload = () => setImagePreview(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const uploadImage = async (): Promise<string | null> => {
+    if (!imageFile) return editProduct?.image_url || null;
+    setUploading(true);
+    const ext = imageFile.name.split(".").pop() || "jpg";
+    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+    const { error } = await supabase.storage
+      .from("product-images")
+      .upload(fileName, imageFile, { contentType: imageFile.type });
+
+    setUploading(false);
+    if (error) {
+      toast.error("Image upload failed: " + error.message);
+      return editProduct?.image_url || null;
+    }
+
+    const { data: urlData } = supabase.storage
+      .from("product-images")
+      .getPublicUrl(fileName);
+
+    return urlData.publicUrl;
   };
 
   const handleSave = async () => {
@@ -59,6 +131,8 @@ const AdminDashboard = () => {
       return;
     }
 
+    const imageUrl = await uploadImage();
+
     const productData = {
       name: form.name.trim(),
       description: form.description.trim() || null,
@@ -67,6 +141,7 @@ const AdminDashboard = () => {
       category_id: form.category_id || null,
       is_available: form.is_available,
       shop_id: shop.id,
+      image_url: imageUrl,
     };
 
     if (editProduct) {
@@ -103,6 +178,8 @@ const AdminDashboard = () => {
       category_id: product.category_id || "",
       is_available: product.is_available,
     });
+    setImagePreview(product.image_url || null);
+    setImageFile(null);
     setIsAddOpen(true);
   };
 
@@ -115,9 +192,19 @@ const AdminDashboard = () => {
             <h1 className="text-2xl font-bold text-primary-foreground font-display">Dashboard</h1>
             <p className="text-sm text-primary-foreground/70">{shop?.name || "Your Store"}</p>
           </div>
-          <Button variant="ghost" size="icon" onClick={signOut} className="text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10">
-            <LogOut className="h-5 w-5" />
-          </Button>
+          <div className="flex items-center gap-1">
+            {stats && stats.lowStock > 0 && (
+              <div className="relative">
+                <Bell className="h-5 w-5 text-primary-foreground/70" />
+                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
+                  {stats.lowStock}
+                </span>
+              </div>
+            )}
+            <Button variant="ghost" size="icon" onClick={signOut} className="text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10">
+              <LogOut className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -181,6 +268,64 @@ const AdminDashboard = () => {
               <DialogTitle className="font-display">{editProduct ? "Edit Product" : "Add Product"}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 pt-2">
+              {/* Image Capture Section */}
+              <div>
+                <Label>Product Image</Label>
+                <div className="mt-2">
+                  {imagePreview ? (
+                    <div className="relative">
+                      <img
+                        src={imagePreview}
+                        alt="Product preview"
+                        className="h-40 w-full rounded-lg object-cover border border-border"
+                      />
+                      <button
+                        onClick={() => { setImagePreview(null); setImageFile(null); }}
+                        className="absolute right-2 top-2 rounded-full bg-destructive p-1"
+                      >
+                        <X className="h-3.5 w-3.5 text-destructive-foreground" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="flex-1 h-24 flex-col gap-1.5"
+                        onClick={() => cameraInputRef.current?.click()}
+                      >
+                        <Camera className="h-6 w-6 text-primary" />
+                        <span className="text-xs">Take Photo</span>
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="flex-1 h-24 flex-col gap-1.5"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <Upload className="h-6 w-6 text-accent" />
+                        <span className="text-xs">Upload</span>
+                      </Button>
+                    </div>
+                  )}
+                  <input
+                    ref={cameraInputRef}
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    className="hidden"
+                    onChange={handleImageCapture}
+                  />
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleImageCapture}
+                  />
+                </div>
+              </div>
+
               <div>
                 <Label>Product Name</Label>
                 <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. Fresh Tomatoes" />
@@ -214,8 +359,8 @@ const AdminDashboard = () => {
                 <Label>Available</Label>
                 <Switch checked={form.is_available} onCheckedChange={(v) => setForm({ ...form, is_available: v })} />
               </div>
-              <Button className="w-full gradient-fresh text-primary-foreground" onClick={handleSave}>
-                {editProduct ? "Update Product" : "Add Product"}
+              <Button className="w-full gradient-fresh text-primary-foreground" onClick={handleSave} disabled={uploading}>
+                {uploading ? "Uploading image..." : editProduct ? "Update Product" : "Add Product"}
               </Button>
             </div>
           </DialogContent>
@@ -229,7 +374,7 @@ const AdminDashboard = () => {
           {stats?.products?.map((product) => (
             <Card key={product.id} className="shadow-card">
               <CardContent className="flex items-center gap-3 p-3">
-                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-secondary text-xl">
+                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-secondary text-xl overflow-hidden">
                   {product.image_url ? (
                     <img src={product.image_url} alt={product.name} className="h-full w-full rounded-lg object-cover" />
                   ) : "🛒"}

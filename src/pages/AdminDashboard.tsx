@@ -389,22 +389,37 @@ const AdminDashboard = () => {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="truncate text-sm font-medium">{product.name}</p>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-primary">₹{product.price}</span>
-                    <span className="text-xs text-muted-foreground">Qty: {product.quantity}</span>
-                    {product.views_count ? (
-                      <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
-                        <Eye className="h-3 w-3" />{product.views_count}
-                      </span>
-                    ) : null}
-                  </div>
+                  <span className="text-xs font-semibold text-primary">₹{product.price}</span>
                 </div>
-                <div className="flex gap-1">
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(product)}>
-                    <Pencil className="h-3.5 w-3.5" />
+                {/* Quantity +/- controls */}
+                <div className="flex items-center gap-1.5">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-7 w-7 rounded-full"
+                    onClick={() => handleQuantityChange(product.id, product.quantity, -1)}
+                    disabled={product.quantity <= 0}
+                  >
+                    <Minus className="h-3 w-3" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(product.id)}>
-                    <Trash2 className="h-3.5 w-3.5" />
+                  <span className={`min-w-[2rem] text-center text-sm font-bold ${product.quantity <= (product.low_stock_threshold || 5) ? "text-warning" : ""}`}>
+                    {product.quantity}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-7 w-7 rounded-full"
+                    onClick={() => handleQuantityChange(product.id, product.quantity, 1)}
+                  >
+                    <Plus className="h-3 w-3" />
+                  </Button>
+                </div>
+                <div className="flex gap-0.5">
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(product)}>
+                    <Pencil className="h-3 w-3" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete(product.id)}>
+                    <Trash2 className="h-3 w-3" />
                   </Button>
                 </div>
               </CardContent>

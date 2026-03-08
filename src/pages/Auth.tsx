@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,19 +18,35 @@ const Auth = () => {
 
   const isAdminMode = mode === "admin";
 
-  // Customer: sign up with a dummy password (auto-confirmed, no verification)
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) navigate("/", { replace: true });
+    });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) navigate("/", { replace: true });
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
+  // Customer: email-only login, with magic-link fallback for previously registered users
   const handleCustomerLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim()) {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail) {
       toast.error("Please enter your email");
       return;
     }
+
+    const customerPassword = "customer-auto-login";
     setLoading(true);
 
-    // Try signing in first
     const { error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password: "customer-auto-login",
+      email: normalizedEmail,
+      password: customerPassword,
     });
 
     if (!signInError) {
@@ -40,19 +56,40 @@ const Auth = () => {
       return;
     }
 
-    // If sign-in fails, sign up (auto-confirmed)
     const { error: signUpError } = await supabase.auth.signUp({
-      email,
-      password: "customer-auto-login",
+      email: normalizedEmail,
+      password: customerPassword,
     });
 
-    setLoading(false);
-    if (signUpError) {
-      toast.error(signUpError.message);
-    } else {
+    if (!signUpError) {
+      setLoading(false);
       toast.success("Welcome!");
       navigate("/");
+      return;
     }
+
+    const alreadyExists = signUpError.message.toLowerCase().includes("already");
+
+    if (alreadyExists) {
+      const { error: linkError } = await supabase.auth.signInWithOtp({
+        email: normalizedEmail,
+        options: {
+          shouldCreateUser: false,
+          emailRedirectTo: `${window.location.origin}/`,
+        },
+      });
+
+      setLoading(false);
+      if (linkError) {
+        toast.error(linkError.message);
+      } else {
+        toast.success("New sign-in link sent. Tap it to open the app directly.");
+      }
+      return;
+    }
+
+    setLoading(false);
+    toast.error(signUpError.message);
   };
 
   // Owner: Password login only

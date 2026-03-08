@@ -202,12 +202,15 @@ const AdminDashboard = () => {
           </div>
           <div className="flex items-center gap-1">
             {stats && stats.lowStock > 0 && (
-              <div className="relative">
+              <button
+                className="relative p-1"
+                onClick={() => document.getElementById("low-stock-alerts")?.scrollIntoView({ behavior: "smooth" })}
+              >
                 <Bell className="h-5 w-5 text-primary-foreground/70" />
                 <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
                   {stats.lowStock}
                 </span>
-              </div>
+              </button>
             )}
             <Button variant="ghost" size="icon" onClick={signOut} className="text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10">
               <LogOut className="h-5 w-5" />

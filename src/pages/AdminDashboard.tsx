@@ -202,12 +202,15 @@ const AdminDashboard = () => {
           </div>
           <div className="flex items-center gap-1">
             {stats && stats.lowStock > 0 && (
-              <div className="relative">
+              <button
+                className="relative p-1"
+                onClick={() => document.getElementById("low-stock-alerts")?.scrollIntoView({ behavior: "smooth" })}
+              >
                 <Bell className="h-5 w-5 text-primary-foreground/70" />
                 <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
                   {stats.lowStock}
                 </span>
-              </div>
+              </button>
             )}
             <Button variant="ghost" size="icon" onClick={signOut} className="text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10">
               <LogOut className="h-5 w-5" />
@@ -244,7 +247,7 @@ const AdminDashboard = () => {
       {/* Low stock alerts */}
       {stats?.lowStock ? (
         <div className="px-4 pt-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">⚠️ Low Stock Alerts</h2>
+          <h2 id="low-stock-alerts" className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">⚠️ Low Stock Alerts</h2>
           <div className="mt-2 space-y-2">
             {stats.products
               ?.filter((p) => p.quantity <= (p.low_stock_threshold || 5) && p.quantity > 0)

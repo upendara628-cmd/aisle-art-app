@@ -14,12 +14,14 @@ const Auth = () => {
   const [searchParams] = useSearchParams();
   const mode = searchParams.get("mode") || "user";
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
 
   const isAdminMode = mode === "admin";
 
+  // Customer: OTP flow
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) {
@@ -56,7 +58,25 @@ const Auth = () => {
       toast.error(error.message);
     } else {
       toast.success("Welcome!");
-      navigate(isAdminMode ? "/admin" : "/");
+      navigate("/");
+    }
+  };
+
+  // Owner: Password login only (no signup)
+  const handleOwnerLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim() || !password.trim()) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    setLoading(false);
+    if (error) {
+      toast.error("Invalid credentials. Only registered owners can sign in.");
+    } else {
+      toast.success("Welcome back!");
+      navigate("/admin");
     }
   };
 
@@ -67,7 +87,7 @@ const Auth = () => {
           {/* Mode Toggle */}
           <div className="flex rounded-lg bg-muted p-1 mb-6">
             <button
-              onClick={() => navigate("/auth?mode=user", { replace: true })}
+              onClick={() => { navigate("/auth?mode=user", { replace: true }); setOtpSent(false); setOtp(""); }}
               className={`flex-1 flex items-center justify-center gap-1.5 rounded-md py-2 text-sm font-medium transition-colors ${
                 !isAdminMode ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
               }`}
@@ -76,7 +96,7 @@ const Auth = () => {
               Customer
             </button>
             <button
-              onClick={() => navigate("/auth?mode=admin", { replace: true })}
+              onClick={() => { navigate("/auth?mode=admin", { replace: true }); setOtpSent(false); setOtp(""); }}
               className={`flex-1 flex items-center justify-center gap-1.5 rounded-md py-2 text-sm font-medium transition-colors ${
                 isAdminMode ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
               }`}
@@ -95,18 +115,52 @@ const Auth = () => {
               )}
             </div>
             <h1 className="mt-3 text-xl font-bold font-display">
-              {otpSent ? "Enter OTP" : isAdminMode ? "Owner Login" : "Customer Login"}
+              {isAdminMode
+                ? "Owner Login"
+                : otpSent
+                ? "Enter OTP"
+                : "Customer Login"}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              {otpSent
+              {isAdminMode
+                ? "Sign in with your owner credentials"
+                : otpSent
                 ? `We sent a 6-digit code to ${email}`
-                : isAdminMode
-                ? "Sign in to manage your store"
                 : "Sign in to reserve items from the store"}
             </p>
           </div>
 
-          {!otpSent ? (
+          {isAdminMode ? (
+            /* Owner: email + password only */
+            <form onSubmit={handleOwnerLogin} className="space-y-4">
+              <div>
+                <Label>Email</Label>
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="owner@store.com"
+                />
+              </div>
+              <div>
+                <Label>Password</Label>
+                <Input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                />
+              </div>
+              <Button
+                type="submit"
+                className="w-full h-11 gradient-fresh text-primary-foreground"
+                disabled={loading}
+              >
+                {loading ? "Signing in..." : "Sign In"}
+              </Button>
+            </form>
+          ) : !otpSent ? (
+            /* Customer: send OTP */
             <form onSubmit={handleSendOtp} className="space-y-4">
               <div>
                 <Label>Email</Label>
@@ -114,18 +168,19 @@ const Auth = () => {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder={isAdminMode ? "owner@store.com" : "you@email.com"}
+                  placeholder="you@email.com"
                 />
               </div>
               <Button
                 type="submit"
-                className={`w-full h-11 ${isAdminMode ? "gradient-fresh text-primary-foreground" : "bg-primary text-primary-foreground"}`}
+                className="w-full h-11 bg-primary text-primary-foreground"
                 disabled={loading}
               >
                 {loading ? "Sending..." : "Send OTP"}
               </Button>
             </form>
           ) : (
+            /* Customer: verify OTP */
             <div className="space-y-4">
               <div className="flex justify-center">
                 <InputOTP maxLength={6} value={otp} onChange={setOtp}>
@@ -141,7 +196,7 @@ const Auth = () => {
               </div>
               <Button
                 onClick={handleVerifyOtp}
-                className={`w-full h-11 ${isAdminMode ? "gradient-fresh text-primary-foreground" : "bg-primary text-primary-foreground"}`}
+                className="w-full h-11 bg-primary text-primary-foreground"
                 disabled={loading || otp.length !== 6}
               >
                 {loading ? "Verifying..." : "Verify & Sign In"}

@@ -4,10 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Store, User, ArrowLeft } from "lucide-react";
+import { Store, User, ArrowLeft, Mail } from "lucide-react";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -20,8 +19,8 @@ const Auth = () => {
 
   const isAdminMode = mode === "admin";
 
-  // Customer: OTP flow
-  const handleSendOtp = async (e: React.FormEvent) => {
+  // Customer: Magic link flow
+  const handleSendMagicLink = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) {
       toast.error("Please enter your email");
@@ -36,28 +35,8 @@ const Auth = () => {
     if (error) {
       toast.error(error.message);
     } else {
-      setOtpSent(true);
-      toast.success("OTP sent to your email!");
-    }
-  };
-
-  const handleVerifyOtp = async () => {
-    if (otp.length !== 6) {
-      toast.error("Please enter the 6-digit code");
-      return;
-    }
-    setLoading(true);
-    const { error } = await supabase.auth.verifyOtp({
-      email,
-      token: otp,
-      type: "email",
-    });
-    setLoading(false);
-    if (error) {
-      toast.error(error.message);
-    } else {
-      toast.success("Welcome!");
-      navigate("/");
+      setMagicLinkSent(true);
+      toast.success("Magic link sent to your email!");
     }
   };
 
@@ -86,7 +65,7 @@ const Auth = () => {
           {/* Mode Toggle */}
           <div className="flex rounded-lg bg-muted p-1 mb-6">
             <button
-              onClick={() => { navigate("/auth?mode=user", { replace: true }); setOtpSent(false); setOtp(""); }}
+              onClick={() => { navigate("/auth?mode=user", { replace: true }); setMagicLinkSent(false); }}
               className={`flex-1 flex items-center justify-center gap-1.5 rounded-md py-2 text-sm font-medium transition-colors ${
                 !isAdminMode ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
               }`}
@@ -95,7 +74,7 @@ const Auth = () => {
               Customer
             </button>
             <button
-              onClick={() => { navigate("/auth?mode=admin", { replace: true }); setOtpSent(false); setOtp(""); }}
+              onClick={() => { navigate("/auth?mode=admin", { replace: true }); setMagicLinkSent(false); }}
               className={`flex-1 flex items-center justify-center gap-1.5 rounded-md py-2 text-sm font-medium transition-colors ${
                 isAdminMode ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
               }`}
@@ -106,9 +85,13 @@ const Auth = () => {
           </div>
 
           <div className="text-center mb-6">
-            <div className={`mx-auto flex h-14 w-14 items-center justify-center rounded-full ${isAdminMode ? "gradient-fresh" : "bg-primary/10"}`}>
+            <div className={`mx-auto flex h-14 w-14 items-center justify-center rounded-full ${
+              isAdminMode ? "gradient-fresh" : magicLinkSent ? "bg-primary/10" : "bg-primary/10"
+            }`}>
               {isAdminMode ? (
                 <Store className="h-7 w-7 text-primary-foreground" />
+              ) : magicLinkSent ? (
+                <Mail className="h-7 w-7 text-primary" />
               ) : (
                 <User className="h-7 w-7 text-primary" />
               )}
@@ -116,15 +99,15 @@ const Auth = () => {
             <h1 className="mt-3 text-xl font-bold font-display">
               {isAdminMode
                 ? "Owner Login"
-                : otpSent
-                ? "Enter OTP"
+                : magicLinkSent
+                ? "Check Your Email"
                 : "Customer Login"}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
               {isAdminMode
                 ? "Sign in with your owner credentials"
-                : otpSent
-                ? `We sent a 6-digit code to ${email}`
+                : magicLinkSent
+                ? `We sent a sign-in link to ${email}`
                 : "Sign in to reserve items from the store"}
             </p>
           </div>
@@ -158,9 +141,9 @@ const Auth = () => {
                 {loading ? "Signing in..." : "Sign In"}
               </Button>
             </form>
-          ) : !otpSent ? (
-            /* Customer: send OTP */
-            <form onSubmit={handleSendOtp} className="space-y-4">
+          ) : !magicLinkSent ? (
+            /* Customer: send magic link */
+            <form onSubmit={handleSendMagicLink} className="space-y-4">
               <div>
                 <Label>Email</Label>
                 <Input
@@ -175,33 +158,30 @@ const Auth = () => {
                 className="w-full h-11 bg-primary text-primary-foreground"
                 disabled={loading}
               >
-                {loading ? "Sending..." : "Send OTP"}
+                {loading ? "Sending..." : "Send Sign-In Link"}
               </Button>
             </form>
           ) : (
-            /* Customer: verify OTP */
+            /* Customer: magic link sent confirmation */
             <div className="space-y-4">
-              <div className="flex justify-center">
-                <InputOTP maxLength={6} value={otp} onChange={setOtp}>
-                  <InputOTPGroup>
-                    <InputOTPSlot index={0} />
-                    <InputOTPSlot index={1} />
-                    <InputOTPSlot index={2} />
-                    <InputOTPSlot index={3} />
-                    <InputOTPSlot index={4} />
-                    <InputOTPSlot index={5} />
-                  </InputOTPGroup>
-                </InputOTP>
+              <div className="rounded-lg bg-muted/50 p-4 text-center">
+                <p className="text-sm text-foreground font-medium">
+                  Click the link in your email to sign in
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Check your spam folder if you don't see it
+                </p>
               </div>
               <Button
-                onClick={handleVerifyOtp}
-                className="w-full h-11 bg-primary text-primary-foreground"
-                disabled={loading || otp.length !== 6}
+                onClick={handleSendMagicLink as any}
+                variant="outline"
+                className="w-full h-11"
+                disabled={loading}
               >
-                {loading ? "Verifying..." : "Verify & Sign In"}
+                {loading ? "Sending..." : "Resend Link"}
               </Button>
               <button
-                onClick={() => { setOtpSent(false); setOtp(""); }}
+                onClick={() => { setMagicLinkSent(false); }}
                 className="flex items-center justify-center gap-1 w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 <ArrowLeft className="h-3.5 w-3.5" />

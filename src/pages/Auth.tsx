@@ -17,6 +17,7 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
 
   const isAdminMode = mode === "admin";
+  const customerEmailRedirectUrl = "https://aisle-art-app.lovable.app/";
 
   useEffect(() => {
     const {
@@ -75,7 +76,7 @@ const Auth = () => {
         email: normalizedEmail,
         options: {
           shouldCreateUser: false,
-          emailRedirectTo: `${window.location.origin}/`,
+          emailRedirectTo: customerEmailRedirectUrl,
         },
       });
 

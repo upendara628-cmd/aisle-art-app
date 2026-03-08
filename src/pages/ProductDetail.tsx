@@ -42,13 +42,11 @@ const ProductDetail = () => {
       });
       if (orderError) throw orderError;
 
-      // Decrement product quantity
-      const newQty = Math.max(0, product.quantity - 1);
-      const { error: updateError } = await supabase
-        .from("products")
-        .update({ quantity: newQty, is_available: newQty > 0 })
-        .eq("id", product.id);
-      if (updateError) throw updateError;
+      // Don't decrement stock yet — admin will accept first
+
+      toast.success("Reservation request sent! The shop will confirm shortly. 📩");
+      queryClient.invalidateQueries({ queryKey: ["product", id] });
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
 
       toast.success("Item reserved successfully! 🎉");
       queryClient.invalidateQueries({ queryKey: ["product", id] });

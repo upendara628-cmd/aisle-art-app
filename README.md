@@ -1,4 +1,10 @@
-# Welcome to your Lovable project
+# FreshMart Grocery
+
+<p align="center">
+  <img src="public/app-icon.png" alt="FreshMart Grocery App Icon" width="120" />
+</p>
+
+> A local grocery store app — browse products, reserve items, get directions, and manage inventory.
 
 ## Project info
 

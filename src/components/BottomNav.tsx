@@ -8,6 +8,7 @@ const navItems = [
   { icon: ShoppingBag, label: "Products", path: "/products" },
   { icon: Search, label: "Search", path: "/search" },
   { icon: ShoppingCart, label: "Cart", path: "/cart" },
+  { icon: MapPin, label: "Map", path: "/map" },
   { icon: Store, label: "Shop", path: "/shop-info" },
 ];
 

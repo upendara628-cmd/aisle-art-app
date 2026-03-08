@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
@@ -6,20 +6,21 @@ export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-
-  const checkAdminRole = useCallback(async (userId: string) => {
-    // Use a simple timeout to avoid blocking
-    const { data } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .eq("role", "admin")
-      .maybeSingle();
-    setIsAdmin(!!data);
-  }, []);
+  const adminCheckRef = useRef<string | null>(null);
 
   useEffect(() => {
-    // Set up listener FIRST
+    const checkAdmin = async (userId: string) => {
+      if (adminCheckRef.current === userId) return;
+      adminCheckRef.current = userId;
+      const { data } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .eq("role", "admin")
+        .maybeSingle();
+      setIsAdmin(!!data);
+    };
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         const currentUser = session?.user ?? null;
@@ -27,26 +28,25 @@ export const useAuth = () => {
         setLoading(false);
 
         if (currentUser) {
-          // Defer the admin check to avoid blocking auth flow
-          setTimeout(() => checkAdminRole(currentUser.id), 0);
+          checkAdmin(currentUser.id);
         } else {
           setIsAdmin(false);
+          adminCheckRef.current = null;
         }
       }
     );
 
-    // Then check existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       const currentUser = session?.user ?? null;
       setUser(currentUser);
       setLoading(false);
       if (currentUser) {
-        checkAdminRole(currentUser.id);
+        checkAdmin(currentUser.id);
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [checkAdminRole]);
+  }, []);
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -63,6 +63,7 @@ export const useAuth = () => {
   };
 
   const signOut = async () => {
+    adminCheckRef.current = null;
     await supabase.auth.signOut();
   };
 
